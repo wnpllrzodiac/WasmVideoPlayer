@@ -411,15 +411,17 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
     if (!decoder->video_sync) {
         if (pkt->stream_index == decoder->videoStreamIdx) {
             int nal_unit_type = ((pkt->data[4] & 0x7e) >> 1);
+            //simpleLog("nal_unit_type: %d", nal_unit_type);
 	    
-            if (nal_unit_type >= NAL_UNIT_CODED_SLICE_BLA && nal_unit_type <= NAL_UNIT_CODED_SLICE_CRA) {
-                simpleLog("key-frame FOUND");
+            if ((nal_unit_type >= NAL_UNIT_CODED_SLICE_BLA && nal_unit_type <= NAL_UNIT_CODED_SLICE_CRA) || 
+                nal_unit_type == 32/*VPS*/ || nal_unit_type == 33/*SPS*/ || nal_unit_type == 34/*PPS*/ || nal_unit_type == 39/*SEI*/) {
+                simpleLog("key-frame FOUND: %d", nal_unit_type);
                 decoder->video_sync = 1;
             }
         }
         
         if (!decoder->video_sync) {
-            simpleLog("drop NON key-frame pkt %d.", pkt->size);
+            //simpleLog("drop NON key-frame %s pkt %d.", pkt->stream_index == decoder->videoStreamIdx ? "video" : "audio", pkt->size);
             *decodedLen = pkt->size;
             return kErrorCode_Success;
         }
