@@ -18,7 +18,7 @@ extern "C" {
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
-const int kCustomIoBufferSize = 32 * 1024;
+const int kCustomIoBufferSize = 65536;//32 * 1024;
 const int kInitialPcmBufferSize = 128 * 1024;
 const int kDefaultFifoSize = 1 * 1024 * 1024;
 const int kMaxFifoSize = 16 * 1024 * 1024;
@@ -418,12 +418,11 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
                 simpleLog("key-frame FOUND: %d", nal_unit_type);
                 decoder->video_sync = 1;
             }
-        }
-        
-        if (!decoder->video_sync) {
-            //simpleLog("drop NON key-frame %s pkt %d.", pkt->stream_index == decoder->videoStreamIdx ? "video" : "audio", pkt->size);
-            *decodedLen = pkt->size;
-            return kErrorCode_Success;
+            else {
+                //simpleLog("drop NON key-frame %s pkt %d.", pkt->stream_index == decoder->videoStreamIdx ? "video" : "audio", pkt->size);
+                *decodedLen = pkt->size;
+                return kErrorCode_Success;
+            }
         }
     }
     
