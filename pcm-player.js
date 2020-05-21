@@ -59,6 +59,12 @@ PCMPlayer.prototype.feed = function(data) {
     tmp.set(this.samples, 0);
     tmp.set(data, this.samples.length);
     this.samples = tmp;
+
+    //if (this.samples.length > 44100 * 2 * 2 / 20) { // 50 msec
+    if (this.startTime - this.audioCtx.currentTime < 0.02) {
+        console.log("startTime: " + this.startTime + ", curr: " + this.audioCtx.currentTime);
+        this.flush();
+    }
 };
 
 PCMPlayer.prototype.getFormatedValue = function(data) {
@@ -103,13 +109,13 @@ PCMPlayer.prototype.flush = function() {
         for (i = 0; i < length; i++) {
             audioData[i] = this.samples[offset];
             /* fadein */
-            if (i < 50) {
-                audioData[i] =  (audioData[i] * i) / 50;
-            }
+            //if (i < 50) {
+            //    audioData[i] =  (audioData[i] * i) / 50;
+            //}
             /* fadeout*/
-            if (i >= (length - 51)) {
-                audioData[i] =  (audioData[i] * decrement--) / 50;
-            }
+            //if (i >= (length - 51)) {
+            //    audioData[i] =  (audioData[i] * decrement--) / 50;
+            //}
             offset += this.option.channels;
         }
     }
@@ -117,7 +123,7 @@ PCMPlayer.prototype.flush = function() {
     if (this.startTime < this.audioCtx.currentTime) {
         this.startTime = this.audioCtx.currentTime;
     }
-    //console.log('start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
+    console.log('[flush] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
     bufferSource.buffer = audioBuffer;
     bufferSource.connect(this.gainNode);
     bufferSource.start(this.startTime);
@@ -173,7 +179,7 @@ PCMPlayer.prototype.play = function (data) {
     if (this.startTime < this.audioCtx.currentTime) {
         this.startTime = this.audioCtx.currentTime;
     }
-    //console.log('start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
+    console.log('[play] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
     bufferSource.buffer = audioBuffer;
     bufferSource.connect(this.gainNode);
     bufferSource.start(this.startTime);

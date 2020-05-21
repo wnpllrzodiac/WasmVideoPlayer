@@ -763,7 +763,7 @@ Player.prototype.displayAudioFrame = function (frame) {
         this.beginTimeOffset = frame.s;
     }
 
-    this.pcmPlayer.play(new Uint8Array(frame.d));
+    this.pcmPlayer.feed(new Uint8Array(frame.d));
     return true;
 };
 
