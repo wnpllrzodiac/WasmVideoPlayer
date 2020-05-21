@@ -60,9 +60,7 @@ PCMPlayer.prototype.feed = function(data) {
     tmp.set(data, this.samples.length);
     this.samples = tmp;
 
-    //if (this.samples.length > 44100 * 2 * 2 / 20) { // 50 msec
     if (this.startTime - this.audioCtx.currentTime < 0.02) {
-        console.log("startTime: " + this.startTime + ", curr: " + this.audioCtx.currentTime);
         this.flush();
     }
 };
@@ -123,7 +121,7 @@ PCMPlayer.prototype.flush = function() {
     if (this.startTime < this.audioCtx.currentTime) {
         this.startTime = this.audioCtx.currentTime;
     }
-    console.log('[flush] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
+    //console.log('[flush] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
     bufferSource.buffer = audioBuffer;
     bufferSource.connect(this.gainNode);
     bufferSource.start(this.startTime);
@@ -179,7 +177,7 @@ PCMPlayer.prototype.play = function (data) {
     if (this.startTime < this.audioCtx.currentTime) {
         this.startTime = this.audioCtx.currentTime;
     }
-    console.log('[play] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
+    //console.log('[play] start vs current '+this.startTime+' vs '+this.audioCtx.currentTime+' duration: '+audioBuffer.duration);
     bufferSource.buffer = audioBuffer;
     bufferSource.connect(this.gainNode);
     bufferSource.start(this.startTime);

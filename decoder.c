@@ -72,6 +72,7 @@ typedef struct WebDecoder {
     int isStream;
     AVFifoBuffer *fifo;
     int fifoSize;
+    int video_sync;
 } WebDecoder;
 
 WebDecoder *decoder = NULL;
@@ -392,6 +393,11 @@ ErrorCode processDecodedAudioFrame(AVFrame *frame) {
     return ret;
 }
 
+#define NAL_UNIT_CODED_SLICE_BLA            16
+#define NAL_UNIT_CODED_SLICE_IDR            19
+#define NAL_UNIT_CODED_SLICE_IDR_N_LP       20
+#define NAL_UNIT_CODED_SLICE_CRA            21
+
 ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
     int ret = 0;
     int isVideo = 0;
@@ -402,6 +408,23 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
         return kErrorCode_Invalid_Param;
     }
 
+    if (!decoder->video_sync) {
+        if (pkt->stream_index == decoder->videoStreamIdx) {
+            int nal_unit_type = ((pkt->data[4] & 0x7e) >> 1);
+	    
+            if (nal_unit_type >= NAL_UNIT_CODED_SLICE_BLA && nal_unit_type <= NAL_UNIT_CODED_SLICE_CRA) {
+                simpleLog("key-frame FOUND");
+                decoder->video_sync = 1;
+            }
+        }
+        
+        if (!decoder->video_sync) {
+            simpleLog("drop NON key-frame pkt %d.", pkt->size);
+            *decodedLen = pkt->size;
+            return kErrorCode_Success;
+        }
+    }
+    
     *decodedLen = 0;
 
     if (pkt->stream_index == decoder->videoStreamIdx) {
