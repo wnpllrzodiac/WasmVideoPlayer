@@ -420,8 +420,7 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
         return kErrorCode_Invalid_Data;
     }
 
-    if (0) {
-    //if (!decoder->video_sync) {
+    if (!decoder->video_sync) {
         if (pkt->stream_index == decoder->videoStreamIdx && codecContext->codec_id == AV_CODEC_ID_HEVC) {
             //if (codecContext->codec_id == AV_CODEC_ID_H264) {
             //nal_unit_type = pkt->data[4] & 0x1f;
