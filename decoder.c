@@ -407,24 +407,6 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
         simpleLog("decodePacket invalid param.");
         return kErrorCode_Invalid_Param;
     }
-
-    if (!decoder->video_sync) {
-        if (pkt->stream_index == decoder->videoStreamIdx) {
-            int nal_unit_type = ((pkt->data[4] & 0x7e) >> 1);
-            //simpleLog("nal_unit_type: %d", nal_unit_type);
-	    
-            if ((nal_unit_type >= NAL_UNIT_CODED_SLICE_BLA && nal_unit_type <= NAL_UNIT_CODED_SLICE_CRA) || 
-                nal_unit_type == 32/*VPS*/ || nal_unit_type == 33/*SPS*/ || nal_unit_type == 34/*PPS*/ || nal_unit_type == 39/*SEI*/) {
-                simpleLog("key-frame FOUND: %d", nal_unit_type);
-                decoder->video_sync = 1;
-            }
-            else {
-                //simpleLog("drop NON key-frame %s pkt %d.", pkt->stream_index == decoder->videoStreamIdx ? "video" : "audio", pkt->size);
-                *decodedLen = pkt->size;
-                return kErrorCode_Success;
-            }
-        }
-    }
     
     *decodedLen = 0;
 
@@ -438,6 +420,28 @@ ErrorCode decodePacket(AVPacket *pkt, int *decodedLen) {
         return kErrorCode_Invalid_Data;
     }
 
+    if (0) {
+    //if (!decoder->video_sync) {
+        if (pkt->stream_index == decoder->videoStreamIdx && codecContext->codec_id == AV_CODEC_ID_HEVC) {
+            //if (codecContext->codec_id == AV_CODEC_ID_H264) {
+            //nal_unit_type = pkt->data[4] & 0x1f;
+
+            int nal_unit_type = ((pkt->data[4] & 0x7e) >> 1);
+            // simpleLog("h264: %d", nal_unit_type);
+            
+            if ((nal_unit_type >= NAL_UNIT_CODED_SLICE_BLA && nal_unit_type <= NAL_UNIT_CODED_SLICE_CRA) || 
+                nal_unit_type == 32/*VPS*/ || nal_unit_type == 33/*SPS*/ || nal_unit_type == 34/*PPS*/ || nal_unit_type == 39/*SEI*/) {
+                simpleLog("key-frame FOUND: %d", nal_unit_type);
+                decoder->video_sync = 1;
+            }
+            else {
+                //simpleLog("drop NON key-frame %s pkt %d.", pkt->stream_index == decoder->videoStreamIdx ? "video" : "audio", pkt->size);
+                *decodedLen = pkt->size;
+                return kErrorCode_Success;
+            }
+        }
+    }
+    
     ret = avcodec_send_packet(codecContext, pkt);
     if (ret < 0) {
         simpleLog("Error sending a packet for decoding %d.", ret);
