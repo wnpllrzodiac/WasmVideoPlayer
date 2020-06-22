@@ -302,10 +302,18 @@ ErrorCode processDecodedVideoFrame(AVFrame *frame) {
             break;
         }
 
-        if (decoder->videoCodecContext->pix_fmt != AV_PIX_FMT_YUV420P) {
+        if (decoder->videoCodecContext->pix_fmt != AV_PIX_FMT_YUV420P && decoder->videoCodecContext->pix_fmt != AV_PIX_FMT_YUVJ420P) {
             simpleLog("Not YUV420P, but unsupported format %d.", decoder->videoCodecContext->pix_fmt);
             ret = kErrorCode_Invalid_Format;
             break;
+        }
+        
+        static int once = 0;
+        if (decoder->videoCodecContext->pix_fmt == AV_PIX_FMT_YUVJ420P) {
+            if (!once) {
+                simpleLog("YUVJ420P, not too bad");
+                once = 1;
+            }
         }
 
         ret = copyYuvData(frame, decoder->yuvBuffer, decoder->videoCodecContext->width, decoder->videoCodecContext->height);
@@ -777,11 +785,12 @@ ErrorCode openDecoder(int *paramArray, int paramCount, long videoCallback, long 
         simpleLog("Open video codec context success, video stream index %d %x.",
             decoder->videoStreamIdx, (unsigned int)decoder->videoCodecContext);
 
-        simpleLog("Video stream index:%d pix_fmt:%d resolution:%d*%d.",
+        simpleLog("Video stream index:%d, pix_fmt:%d, resolution:%d x %d, codec_id:%d(%s).",
             decoder->videoStreamIdx,
             decoder->videoCodecContext->pix_fmt,
             decoder->videoCodecContext->width,
-            decoder->videoCodecContext->height);
+            decoder->videoCodecContext->height,
+            decoder->videoCodecContext->codec_id, avcodec_get_name(decoder->videoCodecContext->codec_id));
 
         r = openCodecContext(
             decoder->avformatContext,
@@ -797,11 +806,12 @@ ErrorCode openDecoder(int *paramArray, int paramCount, long videoCallback, long 
         simpleLog("Open audio codec context success, audio stream index %d %x.",
             decoder->audioStreamIdx, (unsigned int)decoder->audioCodecContext);
 
-        simpleLog("Audio stream index:%d sample_fmt:%d channel:%d, sample rate:%d.",
+        simpleLog("Audio stream index:%d, sample_fmt:%d, channel:%d, sample rate:%d, codec_id:%d(%s).",
             decoder->audioStreamIdx,
             decoder->audioCodecContext->sample_fmt,
             decoder->audioCodecContext->channels,
-            decoder->audioCodecContext->sample_rate);
+            decoder->audioCodecContext->sample_rate,
+            decoder->audioCodecContext->codec_id, avcodec_get_name(decoder->audioCodecContext->codec_id));
 
         av_seek_frame(decoder->avformatContext, -1, 0, AVSEEK_FLAG_BACKWARD);
 
